@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+            Schema::create('sensores_final', function (Blueprint $table) {
+            $table->id(); // id autoincrement
+            $table->timestamp('fecha')->useCurrent()->useCurrentOnUpdate();
+            $table->string('temperatura', 10);
+            $table->string('ph', 10);
+            $table->string('turbidez', 10);
+        });
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -41,7 +49,8 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-    {
+    {   
+        Schema::dropIfExists('sensores_final');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
