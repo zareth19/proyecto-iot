@@ -1,11 +1,12 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SensorData extends Model
 {
+      use HasFactory;
   protected $table = 'sensores_final'; // tu tabla existente
     protected $primaryKey = 'id';
 
@@ -15,6 +16,13 @@ class SensorData extends Model
         'fecha',
         'temperatura',
         'ph',
-        'turbidez'
+        'oxigeno_disuelto',
+        'amoniaco',
+        'nitritos',
+        'nitratos',
+        'alcalinidad',
+        'dureza',
+        'turbidez',
+        'conductividad'
     ];
 }

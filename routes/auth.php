@@ -11,6 +11,9 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SensorController;
+use App\Http\Controllers\SensoresController;
+
+Route::get('/sensores/{id}/verificar', [SensoresController::class, 'verificar']);
 
 
 Route::get('/sensores', [SensorController::class, 'index']);

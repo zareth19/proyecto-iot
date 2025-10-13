@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\AlertaController;
+
+Route::get('/enviar-alerta', [AlertaController::class, 'enviar']);
 
 Route::get('/', function () {
-    return view('auth.login');
+    return view('dashboard');
 });
 
 Route::get('/dashboard', function () {
