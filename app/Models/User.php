@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone_number',
+        'recibe_alerta',
     ];
 
     /**
@@ -43,6 +45,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'recibe_alerta' => 'boolean',
         ];
+    }
+
+    public function routeNotificationForTwilioWhatsApp()
+    {
+        return $this->phone_number;
     }
 }

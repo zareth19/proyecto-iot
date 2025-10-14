@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\SensorData;
+use App\Services\TwilioWhatsAppChannel;
 
 class AlertaNotificacion extends Notification
 {
@@ -33,7 +34,7 @@ class AlertaNotificacion extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', TwilioWhatsAppChannel::class];
     }
 
     /**
@@ -48,6 +49,33 @@ class AlertaNotificacion extends Notification
                 'alertasTilapia' => $this->alertasTilapia,
                 'alertasCachama' => $this->alertasCachama,
             ]);
+    }
+
+    public function toTwilioWhatsApp(object $notifiable): string
+    {
+        $message = "🚨 *Alerta de Sensores Fuera de Rango* 🚨\n\n";
+        $message .= "*ID del Sensor:* " . ($this->sensorData->id ?? 'N/A') . "\n";
+        $message .= "*Fecha y Hora:* " . ($this->sensorData->fecha ?? 'N/A') . "\n\n";
+
+        if (!empty($this->alertasTilapia)) {
+            $message .= "*Alertas para Tilapia:*\n";
+            foreach ($this->alertasTilapia as $alerta) {
+                $message .= "- {$alerta}\n";
+            }
+            $message .= "\n";
+        }
+
+        if (!empty($this->alertasCachama)) {
+            $message .= "*Alertas para Cachama:*\n";
+            foreach ($this->alertasCachama as $alerta) {
+                $message .= "- {$alerta}\n";
+            }
+            $message .= "\n";
+        }
+
+        $message .= "Por favor, revisa los detalles en el panel de control: " . url('/dashboard');
+
+        return $message;
     }
 
     /**
