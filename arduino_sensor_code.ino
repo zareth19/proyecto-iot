@@ -105,7 +105,7 @@ void conectarWiFi() {
     ESP.restart();
   }
 }
-
+//
 // Generar valores simulados para sensores que no tienes
 float simularOxigeno() { return 5.0 + random(-10, 20) / 10.0; }
 float simularAmoniaco() { return 0.02 + random(0, 5) / 100.0; }
@@ -145,7 +145,7 @@ void enviarDatosLaravel(float temp, float ph, float turbidez) {
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(10000);
   
-  // Crear JSON con sensores reales + simulados
+  // Crear JSON con sensores reales + simulados estos van a cambiar segun los sensores que tengas
   DynamicJsonDocument doc(1024);
   doc["temperatura"] = temp;
   doc["ph"] = ph;
