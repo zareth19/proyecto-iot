@@ -34,7 +34,7 @@ class VerificarSensores
         ],
     ];
 
-    public function ejecutar(SensorData $sensorData = null)
+    public function ejecutar(?SensorData $sensorData = null)
     {
         $sensores = ($sensorData) ? collect([$sensorData]) : SensorData::latest()->take(10)->get();
 
@@ -51,7 +51,7 @@ class VerificarSensores
                     'alertas_cachama' => $alertasCachama,
                 ];
 
-                $usuarios = User::where('recibe_alerta', true)->get();
+                $usuarios = User::where('email', true)->get();
                 foreach ($usuarios as $usuario) {
                     $usuario->notify(new AlertaNotificacion($sensor, $alertasTilapia, $alertasCachama));
                 }

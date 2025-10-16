@@ -4,8 +4,18 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AlertaController;
+use App\Http\Controllers\SensorController;
 
 Route::get('/enviar-alerta', [AlertaController::class, 'enviar']);
+
+// Rutas para Arduino (sin middleware de autenticación)
+Route::post('/api/sensores', [SensorController::class, 'recibirDatos']);
+Route::get('/api/sensores', [SensorController::class, 'obtenerDatos']);
+
+// Ruta de prueba para verificar conectividad
+Route::get('/api/test', function() {
+    return response()->json(['status' => 'ok', 'message' => 'API funcionando']);
+});
 
 Route::get('/', function () {
     return view('dashboard');

@@ -15,10 +15,10 @@ class AlertaController extends Controller
         $this->verificarSensores = $verificarSensores;
     }
 
-    public function enviarAlertas()
+    public function enviar()
     {
         // Puedes crear un SensorData de prueba o recuperar uno existente para probar
-        $sensorDePrueba = SensorData::find(1); // O el ID de un sensor que sabes que está fuera de rango
+        $sensorDePrueba = SensorData::find(2); // O el ID de un sensor que sabes que está fuera de rango
 
         if (!$sensorDePrueba) {
             return 'No se encontró un sensor para probar las alertas.';
