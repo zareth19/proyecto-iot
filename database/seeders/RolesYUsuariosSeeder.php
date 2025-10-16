@@ -29,6 +29,18 @@ class RolesYUsuariosSeeder extends Seeder
         ]);
         $admin->assignRole($adminRole);
 
+        // Crear usuarios
+        $admin = User::create([
+            'tipo_documento' => 'CC',
+            'numero_documento' => '1032177889',
+            'nombre' => 'Zareth',
+            'apellido' => 'Fuentes',
+            'correo' => 'zarethfuentes2@gmail.com',
+            'telefono' => '3126903979',
+            'contraseña' => Hash::make('zareth'),
+        ]);
+        $admin->assignRole($adminRole);
+
         $operario = User::create([
             'tipo_documento' => 'CC',
             'numero_documento' => '100000003',

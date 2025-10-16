@@ -44,7 +44,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 Route::middleware(['auth', 'role:operario'])->group(function () {
     Route::get('/dashboard/operario', [OperarioController::class, 'index'])->name('dashboard.operario');
-    Route::get('/dashboard/admin/sensores', [AdminController::class, 'dashboardSensores'])->name('admin.sensores');
 
 });
 
@@ -56,7 +55,6 @@ Route::middleware(['auth', 'role:operario'])->group(function () {
 
 Route::middleware(['auth', 'role:estandar'])->group(function () {
     Route::get('/dashboard/estandar', [EstandarController::class, 'index'])->name('dashboard.estandar');
-    Route::get('/dashboard/admin/sensores', [AdminController::class, 'dashboardSensores'])->name('admin.sensores');
 
 });
 

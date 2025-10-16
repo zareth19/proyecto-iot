@@ -27,7 +27,7 @@ class UserController extends Controller
     'correo' => 'required|email|unique:users,correo',
     'telefono' => 'required|numeric',
     'rol' => 'required|string',
-    'contraseña' => 'required|string|confirmed|min:6', // confirmed revisa contraseña_confirmation
+    'contraseña' => 'required|string|confirmed|min:6', 
 ]);
 
 User::create([

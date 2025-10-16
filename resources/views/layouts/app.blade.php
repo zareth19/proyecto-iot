@@ -50,10 +50,10 @@
                     <i class="fa-solid fa-users mr-2"></i>
                     <span x-show="sidebarOpen" x-transition>Usuarios</span>
                 </a>
-                <a href="{{ route('alertas.index') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
+                <a href="" class="flex items-center hover:bg-green-700 p-2 rounded">
                     <i class="fa-solid fa-bell mr-2"></i>
                     <span x-show="sidebarOpen" x-transition>
-                        Alertas ({{ \App\Models\Alerta::count() }})
+                        Alertas 
                     </span>
                 </a>
 
@@ -73,10 +73,10 @@
                     <i class="fa-solid fa-file-lines mr-2"></i>
                     <span x-show="sidebarOpen" x-transition>Reportes Manuales</span>
                 </a>
-                <a href="{{ route('alertas.index') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
+                <a href="" class="flex items-center hover:bg-green-700 p-2 rounded">
                     <i class="fa-solid fa-bell mr-2"></i>
                     <span x-show="sidebarOpen" x-transition>
-                        Alertas ({{ \App\Models\Alerta::count() }})
+                        Alertas 
                     </span>
                 </a>
 
