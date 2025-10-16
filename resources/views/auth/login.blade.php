@@ -16,9 +16,10 @@
 
         <!-- Carrusel de fondo -->
         <template x-for="(image, index) in images" :key="index">
-            <div x-show="current === index" x-transition:enter="transition-opacity ease-in-out duration-700"
+            <div x-show="current === index" 
+                 x-transition:enter="transition-opacity ease-in-out duration-700"
                  x-transition:enter-end="opacity-100"
-                class="absolute inset-0">
+                 class="absolute inset-0">
                 <img :src="image" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black bg-opacity-50"></div>
             </div>
@@ -36,23 +37,24 @@
                     INGRESO USUARIOS
                 </h2>
 
-                <form method="POST" action="{{ route('login') }}">
+                <!-- Formulario de inicio de sesión -->
+                <form method="POST" action="{{ route('login.post') }}">
                     @csrf
 
                     <!-- Tipo de documento -->
                     <div class="mb-4">
-                        <label for="document_type" class="block text-gray-700 mb-1">Tipo de Documento</label>
-                        <select id="document_type" name="document_type"
+                        <label for="tipo_documento" class="block text-gray-700 mb-1">Tipo de Documento</label>
+                        <select id="tipo_documento" name="tipo_documento"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <option value="cc">Cédula de Ciudadanía</option>
-                            <option value="ti">Tarjeta de Identidad</option>
-                            <option value="ce">Cédula de Extranjería</option>
+                            <option value="CC">Cédula de Ciudadanía</option>
+                            <option value="TI">Tarjeta de Identidad</option>
+                            <option value="CE">Cédula de Extranjería</option>
                         </select>
                     </div>
 
                     <!-- Número de documento -->
                     <div class="mb-4 relative">
-                        <input id="document_number" name="document_number" type="text"
+                        <input id="numero_documento" name="numero_documento" type="text"
                             placeholder="Número de Documento"
                             class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
                         <span class="absolute left-3 top-2.5 text-gray-500">
@@ -62,7 +64,7 @@
 
                     <!-- Contraseña -->
                     <div class="mb-4 relative">
-                        <input id="password" name="password" type="password" placeholder="Contraseña"
+                        <input id="contraseña" name="contraseña" type="password" placeholder="Contraseña"
                             class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
                         <span class="absolute left-3 top-2.5 text-gray-500">
                             <i class="fas fa-lock"></i>
@@ -70,7 +72,7 @@
                     </div>
 
                     <!-- Olvidé contraseña -->
-                    <div class=" text-sm mb-4">
+                    <div class="text-sm mb-4 ">
                         <a href="{{ route('password.request') }}" class="text-green-600 hover:underline">
                             Olvidé mi contraseña
                         </a>
@@ -78,9 +80,20 @@
 
                     <!-- Botón -->
                     <button type="submit"
-                        class=" w-full  hover:bg-green-700  py-2 rounded-md shadow">
+                        class="w-full hover:bg-green-700 py-2 rounded-md shadow text-center">
                         INGRESAR
                     </button>
+
+                    <!-- Mostrar errores -->
+                    @if ($errors->any())
+                        <div class="mt-4 text-red-600 text-sm">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
                 </form>
             </div>
@@ -88,8 +101,8 @@
     </div>
 
 </body>
+
 <style>
-    
 button {
   background: transparent;
   position: relative;
@@ -108,10 +121,6 @@ button {
   color: #15803D;
   transition: color 0.3s 0.1s ease-out;
   text-align: center; 
-}
-
-button span {
-  margin: 10px;
 }
 
 button::before {
@@ -141,6 +150,5 @@ button:hover {
 button:hover::before {
   box-shadow: inset 0 0 0 10em #15803D;
 }
-
 </style>
 </html>
