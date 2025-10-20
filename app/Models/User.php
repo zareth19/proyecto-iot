@@ -6,11 +6,10 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; 
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable;
 
     /**
      * Nombre de la tabla.
@@ -21,9 +20,20 @@ class User extends Authenticatable
      * Campos que se pueden llenar masivamente.
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'tipo_documento',
+        'numero_documento',
+        'nombre',
+        'apellido',
+        'primer_nombre',
+        'segundo_nombre',
+        'primer_apellido',
+        'segundo_apellido',
+        'correo',
+        'telefono',
+        'contraseña',
+        'rol',
+        'foto',
+        'debe_cambiar_contraseña'
     ];
 
     /**
@@ -45,16 +55,56 @@ class User extends Authenticatable
     /**
      * Campos con conversión automática de tipos.
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
+     * Método para obtener el nombre completo del usuario (atómico).
+     */
+    public function getNombreCompletoAttribute()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+        $nombres = trim(($this->primer_nombre ?? '') . ' ' . ($this->segundo_nombre ?? ''));
+        $apellidos = trim(($this->primer_apellido ?? '') . ' ' . ($this->segundo_apellido ?? ''));
+        
+        // Si no hay campos atómicos, usar los campos legacy
+        if (empty($nombres) && empty($apellidos)) {
+            return "{$this->nombre} {$this->apellido}";
+        }
+        
+        return trim($nombres . ' ' . $apellidos);
+    }
+    
+    /**
+     * Obtener tipo de documento en formato largo
+     */
+    public function getTipoDocumentoLargoAttribute()
+    {
+        $tipos = [
+            'CC' => 'Cédula de Ciudadanía',
+            'TI' => 'Tarjeta de Identidad',
+            'CE' => 'Cédula de Extranjería',
+            'PP' => 'Pasaporte'
         ];
+        
+        return $tipos[$this->tipo_documento] ?? $this->tipo_documento;
     }
 
-    public function routeNotificationForTwilioWhatsApp()
+    /**
+     * Alias para compatibilidad con notificaciones
+     */
+    public function getEmailAttribute()
     {
-        return $this->phone_number;
+        return $this->correo;
+    }
+
+    public function getNameAttribute()
+    {
+        // Usar campos atómicos si están disponibles
+        if ($this->primer_nombre || $this->primer_apellido) {
+            return $this->nombre_completo;
+        }
+        
+        return $this->nombre . ' ' . $this->apellido;
     }
 }

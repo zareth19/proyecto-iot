@@ -12,12 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('alertas', function (Blueprint $table) {
-    $table->id();
-    $table->string('sensor');
-    $table->float('valor');
-    $table->text('descripcion')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            $table->unsignedBigInteger('sensor_id');
+            $table->string('tipo');
+            $table->text('mensaje');
+            $table->string('nivel')->default('warning');
+            $table->boolean('leida')->default(false);
+            $table->timestamp('fecha_alerta');
+            $table->timestamps();
+        });
     }
 
     /**

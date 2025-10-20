@@ -29,17 +29,18 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+            $rol = strtolower(trim($user->rol ?? ''));
 
-            //  Redirección según rol
-            if ($user->hasRole('admin')) {
-                return redirect()->route('dashboard.admin');
-            } elseif ($user->hasRole('operario')) {
-                return redirect()->route('dashboard.operario');
-            } elseif ($user->hasRole('estandar')) {
-                return redirect()->route('dashboard.estandar');
-            } else {
-                Auth::logout();
-                return redirect()->route('login')->withErrors(['rol' => 'El usuario no tiene un rol asignado.']);
+            switch ($rol) {
+                case 'admin':
+                    return redirect()->route('dashboard.admin');
+                case 'operario':
+                    return redirect()->route('dashboard.operario');
+                case 'estandar':
+                    return redirect()->route('dashboard.estandar');
+                default:
+                    Auth::logout();
+                    return redirect()->route('login')->withErrors(['rol' => 'El usuario no tiene un rol válido asignado.']);
             }
         }
 

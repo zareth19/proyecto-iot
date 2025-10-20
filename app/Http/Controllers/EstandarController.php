@@ -14,7 +14,7 @@ class EstandarController extends Controller
     public function index()
     {
         $usuario = Auth::user();
-        return view('dashboard.admin-welcome', compact('usuario'));
+        return view('dashboard.estandar-welcome', compact('usuario'));
     }
 
          /**

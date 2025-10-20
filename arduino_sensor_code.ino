@@ -5,8 +5,8 @@
 #include <DallasTemperature.h>
 
 // --------- CONFIG WIFI ----------
-const char* ssid = "Juan_g";
-const char* password = "zdik2016";
+const char* ssid = "iPhone";
+const char* password = "987654321";
 
 // --------- CONFIG SERVIDOR LARAVEL ----------
 const char* serverURL = "http://192.168.43.164/proyecto-iot/public/api/sensores";
@@ -145,18 +145,11 @@ void enviarDatosLaravel(float temp, float ph, float turbidez) {
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(10000);
   
-  // Crear JSON con sensores reales + simulados estos van a cambiar segun los sensores que tengas
-  DynamicJsonDocument doc(1024);
+  // Crear JSON solo con sensores reales
+  DynamicJsonDocument doc(512);
   doc["temperatura"] = temp;
   doc["ph"] = ph;
   doc["turbidez"] = turbidez;
-  doc["oxigeno_disuelto"] = simularOxigeno();
-  doc["amoniaco"] = simularAmoniaco();
-  doc["nitritos"] = simularNitritos();
-  doc["nitratos"] = simularNitratos();
-  doc["alcalinidad"] = simularAlcalinidad();
-  doc["dureza"] = simularDureza();
-  doc["conductividad"] = simularConductividad();
   
   String jsonString;
   serializeJson(doc, jsonString);

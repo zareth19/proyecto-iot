@@ -21,21 +21,14 @@ class SensorController extends Controller
         try {
             $datos = $request->validate([
                 'temperatura' => 'required|numeric',
-                'ph' => 'required|numeric', 
-                'oxigeno_disuelto' => 'required|numeric',
-                'amoniaco' => 'required|numeric',
-                'nitritos' => 'required|numeric',
-                'nitratos' => 'required|numeric',
-                'alcalinidad' => 'required|numeric',
-                'dureza' => 'required|numeric',
-                'turbidez' => 'required|numeric',
-                'conductividad' => 'required|numeric'
+                'ph' => 'required|numeric',
+                'turbidez' => 'required|numeric'
             ]);
 
             // Agregar fecha actual
             $datos['fecha'] = now();
 
-            // Guardar en base de datos
+            // Guardar solo los datos reales en base de datos
             $sensor = SensorData::create($datos);
 
             // Verificar alertas automáticamente

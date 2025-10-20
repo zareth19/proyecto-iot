@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 
 class AdminController extends Controller
@@ -34,28 +35,46 @@ class AdminController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'numero_documento' => 'required|numeric|unique:users,numero_documento',
-            'tipo_documento' => 'required|in:CC,TI,CE',
+            'primer_nombre' => 'required|string|max:50',
+            'segundo_nombre' => 'nullable|string|max:50',
+            'primer_apellido' => 'required|string|max:50',
+            'segundo_apellido' => 'nullable|string|max:50',
+            'numero_documento' => 'required|string|unique:users,numero_documento',
+            'tipo_documento' => 'required|in:CC,TI,CE,PP,Cédula de Ciudadanía,Tarjeta de Identidad,Cédula de Extranjería,Pasaporte',
             'correo' => 'required|email|unique:users,correo',
-            'telefono' => 'required|numeric',
+            'telefono' => 'required|string',
             'rol' => 'required|string',
-            'contraseña' => 'required|string|confirmed|min:6',
         ]);
 
-        User::create([
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
+        // Contraseñas predeterminadas por rol
+        $contraseñasPorRol = [
+            'admin' => 'Admin2024*',
+            'operario' => 'Operario2024*',
+            'estandar' => 'Estandar2024*'
+        ];
+
+        $contraseñaTemporal = $contraseñasPorRol[$request->rol] ?? 'Usuario2024*';
+
+        $usuario = User::create([
+            'primer_nombre' => $request->primer_nombre,
+            'segundo_nombre' => $request->segundo_nombre,
+            'primer_apellido' => $request->primer_apellido,
+            'segundo_apellido' => $request->segundo_apellido,
+            'nombre' => trim($request->primer_nombre . ' ' . ($request->segundo_nombre ?? '')),
+            'apellido' => trim($request->primer_apellido . ' ' . ($request->segundo_apellido ?? '')),
             'numero_documento' => $request->numero_documento,
             'tipo_documento' => $request->tipo_documento,
             'correo' => $request->correo,
             'telefono' => $request->telefono,
             'rol' => $request->rol,
-            'contraseña' => bcrypt($request->contraseña),
+            'contraseña' => bcrypt($contraseñaTemporal),
+            'debe_cambiar_contraseña' => true
         ]);
 
-        return redirect()->route('admin.usuarios')->with('success', 'Usuario creado correctamente.');
+        // Enviar email con contraseña temporal
+        Mail::to($usuario->correo)->send(new \App\Mail\UsuarioCreado($usuario, $contraseñaTemporal));
+
+        return redirect()->route('admin.usuarios')->with('success', 'Usuario creado correctamente. Se ha enviado un email con las credenciales.');
     }
 
     /**
@@ -66,18 +85,24 @@ class AdminController extends Controller
         $usuario = User::findOrFail($id);
 
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'numero_documento' => 'required|numeric|unique:users,numero_documento,' . $usuario->id,
-            'tipo_documento' => 'required|in:CC,TI,CE',
+            'primer_nombre' => 'required|string|max:50',
+            'segundo_nombre' => 'nullable|string|max:50',
+            'primer_apellido' => 'required|string|max:50',
+            'segundo_apellido' => 'nullable|string|max:50',
+            'numero_documento' => 'required|string|unique:users,numero_documento,' . $usuario->id,
+            'tipo_documento' => 'required|in:CC,TI,CE,PP,Cédula de Ciudadanía,Tarjeta de Identidad,Cédula de Extranjería,Pasaporte',
             'correo' => 'required|email|unique:users,correo,' . $usuario->id,
-            'telefono' => 'required|numeric',
+            'telefono' => 'required|string',
             'rol' => 'required|string',
         ]);
 
         $usuario->update([
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
+            'primer_nombre' => $request->primer_nombre,
+            'segundo_nombre' => $request->segundo_nombre,
+            'primer_apellido' => $request->primer_apellido,
+            'segundo_apellido' => $request->segundo_apellido,
+            'nombre' => trim($request->primer_nombre . ' ' . ($request->segundo_nombre ?? '')),
+            'apellido' => trim($request->primer_apellido . ' ' . ($request->segundo_apellido ?? '')),
             'numero_documento' => $request->numero_documento,
             'tipo_documento' => $request->tipo_documento,
             'correo' => $request->correo,

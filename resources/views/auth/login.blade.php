@@ -73,7 +73,7 @@
 
                     <!-- Olvidé contraseña -->
                     <div class="text-sm mb-4 ">
-                        <a href="{{ route('password.request') }}" class="text-green-600 hover:underline">
+                        <a href="{{ route('recuperar.contraseña') }}" class="text-green-600 hover:underline">
                             Olvidé mi contraseña
                         </a>
                     </div>

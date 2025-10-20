@@ -16,13 +16,53 @@ class SensorData extends Model
         'fecha',
         'temperatura',
         'ph',
+        'turbidez'
+    ];
+
+    // Atributos simulados para compatibilidad
+    protected $appends = [
         'oxigeno_disuelto',
-        'amoniaco',
+        'amoniaco', 
         'nitritos',
         'nitratos',
         'alcalinidad',
         'dureza',
-        'turbidez',
         'conductividad'
     ];
+
+    // Generar valores simulados para sensores que no tienes
+    public function getOxigenoDisueltoAttribute()
+    {
+        return round(5.0 + (rand(-10, 20) / 10), 2);
+    }
+
+    public function getAmoniacoAttribute()
+    {
+        return round(0.02 + (rand(0, 5) / 100), 3);
+    }
+
+    public function getNitritosAttribute()
+    {
+        return round(0.1 + (rand(0, 10) / 100), 2);
+    }
+
+    public function getNitratosAttribute()
+    {
+        return round(50.0 + rand(-20, 40), 2);
+    }
+
+    public function getAlcalinidadAttribute()
+    {
+        return round(80.0 + rand(-30, 30), 2);
+    }
+
+    public function getDurezaAttribute()
+    {
+        return round(150.0 + rand(-50, 100), 2);
+    }
+
+    public function getConductividadAttribute()
+    {
+        return round(200.0 + rand(-50, 100), 2);
+    }
 }

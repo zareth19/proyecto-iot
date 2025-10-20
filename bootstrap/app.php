@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Illuminate\Foundation\Configuration\Middleware $middleware) {
     $middleware->alias([
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'verificar.contraseña' => \App\Http\Middleware\VerificarCambioContraseña::class,
+    ]);
+    
+    $middleware->web(append: [
+        \App\Http\Middleware\VerificarCambioContraseña::class,
     ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

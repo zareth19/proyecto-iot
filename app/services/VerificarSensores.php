@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Models\SensorData;
 use App\Models\User;
+use App\Models\Alerta;
 use App\Notifications\AlertaNotificacion;
 
 class VerificarSensores
@@ -45,13 +46,36 @@ class VerificarSensores
             $alertasCachama = $this->fueraDeRango($sensor, 'cachama');
 
             if (!empty($alertasTilapia) || !empty($alertasCachama)) {
+                // Guardar alertas en base de datos
+                foreach ($alertasTilapia as $alerta) {
+                    Alerta::create([
+                        'sensor_id' => $sensor->id,
+                        'tipo' => 'tilapia',
+                        'mensaje' => $alerta,
+                        'nivel' => 'warning',
+                        'leida' => false,
+                        'fecha_alerta' => now()
+                    ]);
+                }
+                
+                foreach ($alertasCachama as $alerta) {
+                    Alerta::create([
+                        'sensor_id' => $sensor->id,
+                        'tipo' => 'cachama',
+                        'mensaje' => $alerta,
+                        'nivel' => 'warning',
+                        'leida' => false,
+                        'fecha_alerta' => now()
+                    ]);
+                }
+
                 $alertasGeneradas[] = [
                     'sensor' => $sensor,
                     'alertas_tilapia' => $alertasTilapia,
                     'alertas_cachama' => $alertasCachama,
                 ];
 
-                $usuarios = User::where('email', true)->get();
+                $usuarios = User::whereNotNull('correo')->get();
                 foreach ($usuarios as $usuario) {
                     $usuario->notify(new AlertaNotificacion($sensor, $alertasTilapia, $alertasCachama));
                 }

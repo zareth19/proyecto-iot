@@ -14,7 +14,7 @@ class OperarioController extends Controller
     public function index()
     {
         $usuario = Auth::user();
-        return view('dashboard.admin-welcome', compact('usuario'));
+        return view('dashboard.operario-welcome', compact('usuario'));
     }
 
         /**

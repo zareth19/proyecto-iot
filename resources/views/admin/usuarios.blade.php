@@ -13,8 +13,7 @@
             numero_documento: '',
             telefono: '',
             correo: '',
-            contraseña: '',
-            confirmcontraseña: '',
+
             rol: ''
             },
           errors: {}
@@ -35,34 +34,24 @@
         $watch('form.correo', val => {
             errors.correo = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) || val === '' ? '' : 'Correo electrónico no válido';
         });
-        $watch('form.contraseña', val => {
-            if (form.confirmcontraseña === '') {
-                errors.confirmcontraseña = '';
-            } else {
-                errors.confirmcontraseña = val === form.confirmcontraseña ? '' : 'Las contraseñas no coinciden';
-            }
-        });
-        $watch('form.confirmcontraseña', val => {
-            if (form.contraseña === '' && val === '') {
-                errors.confirmcontraseña = '';
-            } else {
-                errors.confirmcontraseña = form.contraseña === val ? '' : 'Las contraseñas no coinciden';
-            }
-        });
       "
 >
 <div x-data="{
     showModalCrear: false,
     showModalEditar: false,
+    deleteUserId: null,
     form: {},
     formEdit: {
         id: '',
-        nombre: '',
-        apellido: '',
+        primer_nombre: '',
+        segundo_nombre: '',
+        primer_apellido: '',
+        segundo_apellido: '',
         tipo_documento: '',
         numero_documento: '',
         correo: '',
         telefono: '',
+        rol: ''
     },
     errors: {},
 }"
@@ -131,7 +120,7 @@
                 @foreach ($usuarios as $usuario)
                     <tr class="hover:bg-gray-100">
                         <td class="py-3 px-4">{{ $usuario->id }}</td>
-                        <td class="py-3 px-4">{{ $usuario->tipo_documento }}</td>
+                        <td class="py-3 px-4">{{ $usuario->tipo_documento_largo }}</td>
                         <td class="py-3 px-4">{{ $usuario->numero_documento }}</td>
                         <td class="py-3 px-4">{{ $usuario->nombre }}</td>
                         <td class="py-3 px-4">{{ $usuario->apellido }}</td>
@@ -144,12 +133,15 @@
                                 @click="
                                     showModalEditar = true;
                                     formEdit.id = '{{ $usuario->id }}';
-                                    formEdit.nombre = '{{ $usuario->nombre }}';
-                                    formEdit.apellido = '{{ $usuario->apellido }}';
+                                    formEdit.primer_nombre = '{{ $usuario->primer_nombre ?? explode(' ', $usuario->nombre)[0] ?? '' }}';
+                                    formEdit.segundo_nombre = '{{ $usuario->segundo_nombre ?? (isset(explode(' ', $usuario->nombre)[1]) ? explode(' ', $usuario->nombre)[1] : '') }}';
+                                    formEdit.primer_apellido = '{{ $usuario->primer_apellido ?? explode(' ', $usuario->apellido)[0] ?? '' }}';
+                                    formEdit.segundo_apellido = '{{ $usuario->segundo_apellido ?? (isset(explode(' ', $usuario->apellido)[1]) ? explode(' ', $usuario->apellido)[1] : '') }}';
                                     formEdit.tipo_documento = '{{ $usuario->tipo_documento }}';
                                     formEdit.numero_documento = '{{ $usuario->numero_documento }}';
                                     formEdit.correo = '{{ $usuario->correo }}';
-                                 formEdit.telefono = '{{ $usuario->telefono }}';
+                                    formEdit.telefono = '{{ $usuario->telefono }}';
+                                    formEdit.rol = '{{ $usuario->rol }}';
                                 "
                                 class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm"
                                 >
@@ -157,7 +149,8 @@
                             </button>
 
 
-                                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" @click="deleteUserId = {{ $usuario->id }}" >
+                                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" 
+                                    @click="deleteUserId = {{ $usuario->id }}" >
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
@@ -197,25 +190,31 @@
             <!-- Formulario -->
             <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
                 @csrf
+                <!-- NOMBRES -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- NOMBRE -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Nombre</label>
-                        <input type="text" name="nombre" x-model="form.nombre" required
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Primer Nombre *</label>
+                        <input type="text" name="primer_nombre" x-model="form.primer_nombre" required
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
-                        <template x-if="errors.nombre">
-                            <p class="text-red-600 text-sm mt-1" x-text="errors.nombre"></p>
-                        </template>
                     </div>
-
-                    <!-- APELLIDO -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Apellido</label>
-                        <input type="text" name="apellido" x-model="form.apellido" required
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Segundo Nombre</label>
+                        <input type="text" name="segundo_nombre" x-model="form.segundo_nombre"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
-                        <template x-if="errors.apellido">
-                            <p class="text-red-600 text-sm mt-1" x-text="errors.apellido"></p>
-                        </template>
+                    </div>
+                </div>
+
+                <!-- APELLIDOS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Primer Apellido *</label>
+                        <input type="text" name="primer_apellido" x-model="form.primer_apellido" required
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Segundo Apellido</label>
+                        <input type="text" name="segundo_apellido" x-model="form.segundo_apellido"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
                     </div>
                 </div>
 
@@ -226,9 +225,10 @@
                         <select name="tipo_documento" x-model="form.tipo_documento" required
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
                             <option value="">Seleccionar</option>
-                            <option value="CC">CC</option>
-                            <option value="TI">TI</option>
-                            <option value="CE">CE</option>
+                            <option value="CC">Cédula de Ciudadanía</option>
+                            <option value="TI">Tarjeta de Identidad</option>
+                            <option value="CE">Cédula de Extranjería</option>
+                            <option value="PP">Pasaporte</option>
                         </select>
                     </div>
                     <div class="md:col-span-2">
@@ -259,34 +259,27 @@
                     </div>
                 </div>
 
-                <!-- ROL Y CONTRASEÑA -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Rol</label>
-                        <select name="rol" x-model="form.rol" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
-                            <option value="">Seleccionar</option>
-                            <option value="admin">Administrador</option>
-                            <option value="operario">Operario</option>
-                            <option value="estandar">Estandar</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Contraseña</label>
-                        <input type="password" name="contraseña" x-model="form.contraseña" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
-                    </div>
+                <!-- ROL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Rol</label>
+                    <select name="rol" x-model="form.rol" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                        <option value="">Seleccionar</option>
+                        <option value="admin">Administrador</option>
+                        <option value="operario">Operario</option>
+                        <option value="estandar">Estandar</option>
+                    </select>
                 </div>
 
-                <!-- CONFIRMAR CONTRASEÑA -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Confirmar Contraseña</label>
-                    <input type="password" name="contraseña_confirmation" x-model="form.confirmcontraseña" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
-                    <template x-if="errors.confirmcontraseña">
-                        <p class="text-red-600 text-sm mt-1" x-text="errors.confirmcontraseña"></p>
-                    </template>
+                <!-- NOTA SOBRE CONTRASEÑA -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-info-circle text-blue-600 mr-2"></i>
+                        <p class="text-sm text-blue-800">
+                            <strong>Nota:</strong> Se asignará una contraseña predefinida según el rol seleccionado. 
+                            El usuario recibirá las credenciales por correo electrónico.
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Botones -->
@@ -331,18 +324,30 @@
             @csrf
             @method('PUT')
 
+            <!-- NOMBRES -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- NOMBRE -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Nombre</label>
-                    <input type="text" name="nombre" x-model="formEdit.nombre" required
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Primer Nombre *</label>
+                    <input type="text" name="primer_nombre" x-model="formEdit.primer_nombre" required
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
                 </div>
-
-                <!-- APELLIDO -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Apellido</label>
-                    <input type="text" name="apellido" x-model="formEdit.apellido" required
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Segundo Nombre</label>
+                    <input type="text" name="segundo_nombre" x-model="formEdit.segundo_nombre"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                </div>
+            </div>
+
+            <!-- APELLIDOS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Primer Apellido *</label>
+                    <input type="text" name="primer_apellido" x-model="formEdit.primer_apellido" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Segundo Apellido</label>
+                    <input type="text" name="segundo_apellido" x-model="formEdit.segundo_apellido"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
                 </div>
             </div>
@@ -354,9 +359,10 @@
                     <select name="tipo_documento" x-model="formEdit.tipo_documento" required
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
                         <option value="">Seleccionar</option>
-                        <option value="CC">CC</option>
-                        <option value="TI">TI</option>
-                        <option value="CE">CE</option>
+                        <option value="CC">Cédula de Ciudadanía</option>
+                        <option value="TI">Tarjeta de Identidad</option>
+                        <option value="CE">Cédula de Extranjería</option>
+                        <option value="PP">Pasaporte</option>
                     </select>
                 </div>
                 <div class="md:col-span-2">

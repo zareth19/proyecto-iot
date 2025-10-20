@@ -5,21 +5,20 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Spatie\Permission\Exceptions\UnauthorizedException;
+use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    /**
-     * Verifica que el usuario autenticado tenga el rol especificado.
-     */
-    public function handle(Request $request, Closure $next, $role, $guard = null): Response
+    public function handle(Request $request, Closure $next, $role): Response
     {
-        if (! $request->user()) {
-            throw UnauthorizedException::notLoggedIn();
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Debes iniciar sesión');
         }
 
-        if (! $request->user()->hasRole($role)) {
-            throw UnauthorizedException::forRoles([$role]);
+        $userRole = strtolower(trim(Auth::user()->rol ?? ''));
+        
+        if ($userRole !== strtolower($role)) {
+            abort(403, 'No tienes permisos para acceder a esta página');
         }
 
         return $next($request);
