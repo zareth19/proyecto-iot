@@ -27,12 +27,24 @@ class SensorController extends Controller
 
             // Agregar fecha actual
             $datos['fecha'] = now();
+            
+            // Buscar estanque asociado (asumimos que hay un sensor activo)
+            $estanque = \DB::table('sensores_final')
+                ->join('estanques', 'sensores_final.estanque_id', '=', 'estanques.id')
+                ->whereNotNull('sensores_final.estanque_id')
+                ->first();
+                
+            if ($estanque) {
+                $datos['estanque_id'] = $estanque->estanque_id;
+            }
 
-            // Guardar solo los datos reales en base de datos
+            // Guardar datos en base de datos
             $sensor = SensorData::create($datos);
 
-            // Verificar alertas automáticamente
-            $this->verificarSensores->ejecutar($sensor);
+            // Verificar alertas automáticamente solo si hay estanque asociado
+            if ($estanque) {
+                $this->verificarSensores->ejecutar($sensor, $estanque->tipo_cultivo);
+            }
 
             return response()->json([
                 'success' => true, 
@@ -49,9 +61,11 @@ class SensorController extends Controller
     }
 
     // Obtener datos para el dashboard
-    public function obtenerDatos()
-    {
-        $ultimosDatos = SensorData::latest('fecha')->take(10)->get();
-        return response()->json($ultimosDatos);
-    }
+    public function obtenerDatos(Request $request)
+{
+    $limite = $request->get('limite', 10); // Por defecto 10 registros si no envían el parámetro
+    $ultimosDatos = SensorData::latest('fecha')->take($limite)->get();
+    return response()->json($ultimosDatos);
+}
+
 }

@@ -190,13 +190,31 @@
     function createChart(id, color) {
         return new Chart(document.getElementById(id), {
             type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: color + '22', fill: true, tension: 0.4, borderWidth: 2 }] },
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: color,
+                    backgroundColor: color + '22',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                }]
+            },
             options: {
                 responsive: true,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false }
+                },
                 scales: {
-                    x: { ticks: { color: '#555' }, grid: { display: false } },
-                    y: { ticks: { color: '#555' }, grid: { color: '#eee' } }
+                    x: {
+                        ticks: { color: '#555' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { color: '#555' },
+                        grid: { color: '#eee' }
+                    }
                 }
             }
         });
@@ -205,10 +223,14 @@
     async function cargarDatos() {
         console.log('Cargando datos...');
         try {
-            const response = await fetch('/api/sensores');
+            const response = await fetch(`/api/sensores?limite=${filtro.value}`);
             console.log('Response status:', response.status);
+            if (!response.ok) throw new Error('Error de red');
+
             const datos = await response.json();
             console.log('Datos recibidos:', datos);
+
+            actualizarEstadoConexion(true);
 
             if (datos.length > 0) {
                 const ultimo = datos[0];
@@ -225,13 +247,11 @@
                 ultimaTemp = ultimo.temperatura;
                 ultimaTurbidez = ultimo.turbidez;
 
-                // Actualizar gráficas
                 const etiquetas = datos.map(d => new Date(d.fecha).toLocaleTimeString()).reverse();
                 actualizarGrafico(chartPh, etiquetas, datos.map(d => parseFloat(d.ph)).reverse());
                 actualizarGrafico(chartTemp, etiquetas, datos.map(d => parseFloat(d.temperatura)).reverse());
                 actualizarGrafico(chartTurbidez, etiquetas, datos.map(d => parseFloat(d.turbidez)).reverse());
 
-                // Tabla (limitar según filtro)
                 const datosLimitados = datos.slice(0, parseInt(filtro.value));
                 bodyHistorial.innerHTML = datosLimitados.map(d => `
                     <tr class="border-t border-gray-200 hover:bg-gray-50">
@@ -276,9 +296,17 @@
         chart.update();
     }
 
-    filtro.addEventListener('change', cargarDatos);
+    function actualizarEstadoConexion(conectado) {
+        const estado = document.getElementById('estadoConexion');
+        if (conectado) {
+            estado.className = 'bg-green-100 text-green-800 px-4 py-2 rounded-lg';
+            estado.innerHTML = '<i class="fas fa-wifi mr-2"></i>Conectado';
+        } else {
+            estado.className = 'bg-red-100 text-red-800 px-4 py-2 rounded-lg';
+            estado.innerHTML = '<i class="fas fa-wifi-slash mr-2"></i>Desconectado';
+        }
+    }
 
-    // Sistema de notificaciones
     function mostrarNotificacion(mensaje, tipo = 'info') {
         const notificacion = document.createElement('div');
         notificacion.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
@@ -292,78 +320,15 @@
                 ${mensaje}
             </div>
         `;
-        
         document.body.appendChild(notificacion);
-        
-        setTimeout(() => {
-            notificacion.remove();
-        }, 3000);
+        setTimeout(() => notificacion.remove(), 3000);
     }
 
-    // Actualizar estado de conexión
-    function actualizarEstadoConexion(conectado) {
-        const estado = document.getElementById('estadoConexion');
-        if (conectado) {
-            estado.className = 'bg-green-100 text-green-800 px-4 py-2 rounded-lg';
-            estado.innerHTML = '<i class="fas fa-wifi mr-2"></i>Conectado';
-        } else {
-            estado.className = 'bg-red-100 text-red-800 px-4 py-2 rounded-lg';
-            estado.innerHTML = '<i class="fas fa-wifi-slash mr-2"></i>Desconectado';
-        }
-    }
+    filtro.addEventListener('change', cargarDatos);
 
-    // Cargar datos con manejo de errores
-    async function cargarDatos() {
-        try {
-            const response = await fetch('/api/sensores');
-            if (!response.ok) throw new Error('Error de red');
-            
-            const datos = await response.json();
-            actualizarEstadoConexion(true);
-            
-            // Resto del código de cargarDatos...
-            if (datos.length > 0) {
-                const ultimo = datos[0];
-
-                actualizarCard('ph', ultimo.ph, ultimoPH);
-                actualizarCard('temp', ultimo.temperatura, ultimaTemp, '°C');
-                actualizarCard('turbidez', ultimo.turbidez, ultimaTurbidez, ' NTU');
-                actualizarCard('oxigeno', ultimo.oxigeno_disuelto, ultimo.oxigeno_disuelto, ' mg/L');
-                actualizarCard('amoniaco', ultimo.amoniaco, ultimo.amoniaco, ' mg/L');
-                actualizarCard('nitritos', ultimo.nitritos, ultimo.nitritos, ' mg/L');
-                actualizarCard('conductividad', ultimo.conductividad, ultimo.conductividad, ' μS/cm');
-
-                ultimoPH = ultimo.ph;
-                ultimaTemp = ultimo.temperatura;
-                ultimaTurbidez = ultimo.turbidez;
-
-                // Actualizar gráficas
-                const etiquetas = datos.map(d => new Date(d.fecha).toLocaleTimeString()).reverse();
-                actualizarGrafico(chartPh, etiquetas, datos.map(d => parseFloat(d.ph)).reverse());
-                actualizarGrafico(chartTemp, etiquetas, datos.map(d => parseFloat(d.temperatura)).reverse());
-                actualizarGrafico(chartTurbidez, etiquetas, datos.map(d => parseFloat(d.turbidez)).reverse());
-
-                // Tabla (limitar según filtro)
-                const datosLimitados = datos.slice(0, parseInt(filtro.value));
-                bodyHistorial.innerHTML = datosLimitados.map(d => `
-                    <tr class="border-t border-gray-200 hover:bg-gray-50">
-                        <td class="py-2 px-3">${new Date(d.fecha).toLocaleString()}</td>
-                        <td class="py-2 px-3 text-center">${parseFloat(d.ph).toFixed(2)}</td>
-                        <td class="py-2 px-3 text-center">${parseFloat(d.temperatura).toFixed(2)}</td>
-                        <td class="py-2 px-3 text-center">${parseFloat(d.turbidez).toFixed(2)}</td>
-                    </tr>
-                `).join('');
-            }
-        } catch (error) {
-            console.error('Error al cargar los datos:', error);
-            actualizarEstadoConexion(false);
-        }
-    }
-
-    // Cargar datos iniciales y actualizar cada 10 segundos
     cargarDatos();
     setInterval(cargarDatos, 10000);
-    
+
     console.log('Sistema de monitoreo iniciado - Actualización cada 10 segundos');
 </script>
 @endsection
