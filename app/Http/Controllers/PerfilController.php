@@ -19,15 +19,18 @@ class PerfilController extends Controller
         $user = Auth::user();
         
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'telefono' => 'required|string|max:20',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'telefono' => 'required|regex:/^[0-9]{10}$/|digits:10',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ], [
+            'telefono.required' => 'El teléfono es obligatorio',
+            'telefono.regex' => 'El teléfono debe tener exactamente 10 dígitos',
+            'telefono.digits' => 'El teléfono debe tener exactamente 10 dígitos',
+            'foto.image' => 'El archivo debe ser una imagen',
+            'foto.mimes' => 'La imagen debe ser JPG, PNG o GIF',
+            'foto.max' => 'La imagen no debe superar los 2MB'
         ]);
 
         $datosActualizar = [
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
             'telefono' => $request->telefono
         ];
 
@@ -43,18 +46,12 @@ class PerfilController extends Controller
             $foto = $request->file('foto');
             $nombreFoto = time() . '_' . $user->id . '.' . $foto->getClientOriginalExtension();
             
-            // Crear directorio si no existe
-            $directorioDestino = storage_path('app/public/fotos');
-            if (!is_dir($directorioDestino)) {
-                mkdir($directorioDestino, 0755, true);
-            }
-            
-            // Mover archivo
-            $rutaCompleta = $directorioDestino . '/' . $nombreFoto;
-            if ($foto->move($directorioDestino, $nombreFoto)) {
+            // Usar Storage de Laravel para mejor manejo
+            try {
+                $rutaFoto = $foto->storeAs('fotos', $nombreFoto, 'public');
                 $datosActualizar['foto'] = $nombreFoto;
-            } else {
-                return redirect()->back()->with('error', 'Error al subir la foto');
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Error al subir la foto: ' . $e->getMessage());
             }
         }
 

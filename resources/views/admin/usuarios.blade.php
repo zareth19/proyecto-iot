@@ -3,40 +3,7 @@
 @section('title', 'Gestión de Usuarios')
 
 @section('content')
-<main class="transition-all duration-300 p-6"
-      x-data="{
-          showModalCrear: false,
-          form: {
-            nombre: '',
-            apellido: '',
-            tipo_documento: '',
-            numero_documento: '',
-            telefono: '',
-            correo: '',
-
-            rol: ''
-            },
-          errors: {}
-      }"
-      x-init="
-        $watch('form.nombre', val => {
-            errors.nombre = /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/.test(val) || val === '' ? '' : 'Solo se permiten letras';
-        });
-        $watch('form.apellido', val => {
-            errors.apellido = /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/.test(val) || val === '' ? '' : 'Solo se permiten letras';
-        });
-        $watch('form.numero_documento', val => {
-            errors.numero_documento = /^[0-9]+$/.test(val) || val === '' ? '' : 'Solo se permiten números';
-        });
-        $watch('form.telefono', val => {
-            errors.telefono = /^[0-9]+$/.test(val) || val === '' ? '' : 'Solo se permiten números';
-        });
-        $watch('form.correo', val => {
-            errors.correo = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) || val === '' ? '' : 'Correo electrónico no válido';
-        });
-      "
->
-<div x-data="{
+<main class="transition-all duration-300 p-4 md:p-6" x-data="{
     showModalCrear: false,
     showModalEditar: false,
     deleteUserId: null,
@@ -54,6 +21,38 @@
         rol: ''
     },
     errors: {},
+    validateName(field, value) {
+        if (value && !/^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/.test(value)) {
+            this.errors[field] = 'Solo se permiten letras y espacios';
+        } else {
+            this.errors[field] = '';
+        }
+    },
+    validateDocument(value) {
+        if (value && !/^[0-9]+$/.test(value)) {
+            this.errors.numero_documento = 'Solo se permiten números';
+        } else if (value && value.length < 6) {
+            this.errors.numero_documento = 'Mínimo 6 dígitos';
+        } else {
+            this.errors.numero_documento = '';
+        }
+    },
+    validatePhone(value) {
+        if (value && !/^[0-9]+$/.test(value)) {
+            this.errors.telefono = 'Solo se permiten números';
+        } else if (value && value.length < 10) {
+            this.errors.telefono = 'Mínimo 10 dígitos';
+        } else {
+            this.errors.telefono = '';
+        }
+    },
+    validateEmail(value) {
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            this.errors.correo = 'Formato de correo inválido';
+        } else {
+            this.errors.correo = '';
+        }
+    }
 }"
 >
 
@@ -91,7 +90,7 @@
 </div>
 @endif
 
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 class="text-2xl font-bold text-green-700">Gestión de Usuarios</h1>
         <button 
             @click="showModalCrear = true"
@@ -101,33 +100,33 @@
         </button>
     </div>
 
-    <div class="bg-white shadow rounded-lg p-6 overflow-x-auto">
-        <table class="min-w-full border border-gray-200 rounded-lg">
+    <div class="bg-white shadow rounded-lg p-4 md:p-6 overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-lg text-sm md:text-base">
             <thead class="bg-green-700 text-white">
                 <tr>
-                    <th class="py-3 px-4 text-left">#</th>
-                    <th class="py-3 px-4 text-left">Tipo Documento</th>
-                    <th class="py-3 px-4 text-left">Numero Documento</th>
-                    <th class="py-3 px-4 text-left">Nombre</th>
-                    <th class="py-3 px-4 text-left">Apellido</th>
-                    <th class="py-3 px-4 text-left">Rol</th>
-                    <th class="py-3 px-4 text-left">Correo</th>
-                    <th class="py-3 px-4 text-left">Telefono</th>
-                    <th class="py-3 px-4 text-left">Acciones</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm">#</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm hidden lg:table-cell">Tipo Doc</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm">Documento</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm">Nombre</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm hidden md:table-cell">Apellido</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm">Rol</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm hidden xl:table-cell">Correo</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm hidden lg:table-cell">Teléfono</th>
+                    <th class="py-2 md:py-3 px-2 md:px-4 text-left text-xs md:text-sm">Acciones</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
                 @foreach ($usuarios as $usuario)
                     <tr class="hover:bg-gray-100">
-                        <td class="py-3 px-4">{{ $usuario->id }}</td>
-                        <td class="py-3 px-4">{{ $usuario->tipo_documento_largo }}</td>
-                        <td class="py-3 px-4">{{ $usuario->numero_documento }}</td>
-                        <td class="py-3 px-4">{{ $usuario->nombre }}</td>
-                        <td class="py-3 px-4">{{ $usuario->apellido }}</td>
-                        <td class="py-3 px-4">{{ ucfirst($usuario->rol) }}</td>
-                        <td class="py-3 px-4">{{ $usuario->correo }}</td>
-                        <td class="py-3 px-4">{{ $usuario->telefono }}</td>
-                        <td class="py-3 px-4">
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm">{{ $usuario->id }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm hidden lg:table-cell">{{ $usuario->tipo_documento_largo }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm">{{ $usuario->numero_documento }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm">{{ $usuario->nombre }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm hidden md:table-cell">{{ $usuario->apellido }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm">{{ ucfirst($usuario->rol) }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm hidden xl:table-cell">{{ $usuario->correo }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm hidden lg:table-cell">{{ $usuario->telefono }}</td>
+                        <td class="py-2 md:py-3 px-2 md:px-4">
                             <div class="flex space-x-2">
                               <button 
                                 @click="
@@ -148,11 +147,16 @@
                              <i class="fa-solid fa-pen-to-square text-lg"></i>
                             </button>
 
-
+                                @if($usuario->id !== Auth::id())
                                 <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" 
                                     @click="deleteUserId = {{ $usuario->id }}" >
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
+                                @else
+                                <span class="px-3 py-1 bg-gray-300 text-gray-500 rounded text-sm cursor-not-allowed" title="No puedes eliminar tu propia cuenta">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                </span>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -195,12 +199,20 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Primer Nombre *</label>
                         <input type="text" name="primer_nombre" x-model="form.primer_nombre" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validateName('primer_nombre', $event.target.value)"
+                            :class="errors.primer_nombre ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
+                        <template x-if="errors.primer_nombre">
+                            <p class="text-red-600 text-sm mt-1" x-text="errors.primer_nombre"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Segundo Nombre</label>
                         <input type="text" name="segundo_nombre" x-model="form.segundo_nombre"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validateName('segundo_nombre', $event.target.value)"
+                            :class="errors.segundo_nombre ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
+                        <template x-if="errors.segundo_nombre">
+                            <p class="text-red-600 text-sm mt-1" x-text="errors.segundo_nombre"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -209,12 +221,20 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Primer Apellido *</label>
                         <input type="text" name="primer_apellido" x-model="form.primer_apellido" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validateName('primer_apellido', $event.target.value)"
+                            :class="errors.primer_apellido ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
+                        <template x-if="errors.primer_apellido">
+                            <p class="text-red-600 text-sm mt-1" x-text="errors.primer_apellido"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Segundo Apellido</label>
                         <input type="text" name="segundo_apellido" x-model="form.segundo_apellido"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validateName('segundo_apellido', $event.target.value)"
+                            :class="errors.segundo_apellido ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
+                        <template x-if="errors.segundo_apellido">
+                            <p class="text-red-600 text-sm mt-1" x-text="errors.segundo_apellido"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -234,7 +254,8 @@
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-600 mb-1">Número de Documento</label>
                         <input type="text" name="numero_documento" x-model="form.numero_documento" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validateDocument($event.target.value)"
+                            :class="errors.numero_documento ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
                         <template x-if="errors.numero_documento">
                             <p class="text-red-600 text-sm mt-1" x-text="errors.numero_documento"></p>
                         </template>
@@ -246,7 +267,8 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Teléfono</label>
                         <input type="text" name="telefono" x-model="form.telefono" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validatePhone($event.target.value)"
+                            :class="errors.telefono ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
                         <template x-if="errors.telefono">
                             <p class="text-red-600 text-sm mt-1" x-text="errors.telefono"></p>
                         </template>
@@ -255,7 +277,11 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Correo Electrónico</label>
                         <input type="email" name="correo" x-model="form.correo" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
+                            @input="validateEmail($event.target.value)"
+                            :class="errors.correo ? 'w-full border border-red-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-600' : 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600'">
+                        <template x-if="errors.correo">
+                            <p class="text-red-600 text-sm mt-1" x-text="errors.correo"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -367,8 +393,8 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-600 mb-1">Número de Documento</label>
-                    <input type="text" name="numero_documento" x-model="formEdit.numero_documento" readonly
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed">
+                    <input type="text" name="numero_documento" x-model="formEdit.numero_documento" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-600">
                 </div>
             </div>
 

@@ -5,6 +5,7 @@ use App\Models\SensorData;
 use App\Models\User;
 use App\Models\Alerta;
 use App\Notifications\AlertaNotificacion;
+use Illuminate\Support\Facades\Log;
 
 class VerificarSensores
 {
@@ -35,22 +36,31 @@ class VerificarSensores
         ],
     ];
 
-    public function ejecutar(?SensorData $sensorData = null)
+    public function ejecutar(SensorData $sensorData, $tipoCultivo = null)
     {
-        $sensores = ($sensorData) ? collect([$sensorData]) : SensorData::latest()->take(10)->get();
-
+        Log::info('Verificando sensores', [
+            'sensor_id' => $sensorData->id,
+            'temperatura' => $sensorData->temperatura,
+            'ph' => $sensorData->ph,
+            'turbidez' => $sensorData->turbidez
+        ]);
+        
         $alertasGeneradas = [];
-
-        foreach ($sensores as $sensor) {
-            $alertasTilapia = $this->fueraDeRango($sensor, 'tilapia');
-            $alertasCachama = $this->fueraDeRango($sensor, 'cachama');
-
-            if (!empty($alertasTilapia) || !empty($alertasCachama)) {
+        
+        // Si no se especifica tipo de cultivo, verificar ambos
+        $tiposAVerificar = $tipoCultivo ? [$tipoCultivo] : ['tilapia', 'cachama'];
+        
+        foreach ($tiposAVerificar as $tipo) {
+            $alertas = $this->fueraDeRango($sensorData, $tipo);
+            
+            if (!empty($alertas)) {
+                Log::info("Alertas para {$tipo}", $alertas);
+                
                 // Guardar alertas en base de datos
-                foreach ($alertasTilapia as $alerta) {
+                foreach ($alertas as $alerta) {
                     Alerta::create([
-                        'sensor_id' => $sensor->id,
-                        'tipo' => 'tilapia',
+                        'sensor_id' => $sensorData->id,
+                        'tipo' => $tipo,
                         'mensaje' => $alerta,
                         'nivel' => 'warning',
                         'leida' => false,
@@ -58,29 +68,32 @@ class VerificarSensores
                     ]);
                 }
                 
-                foreach ($alertasCachama as $alerta) {
-                    Alerta::create([
-                        'sensor_id' => $sensor->id,
-                        'tipo' => 'cachama',
-                        'mensaje' => $alerta,
-                        'nivel' => 'warning',
-                        'leida' => false,
-                        'fecha_alerta' => now()
-                    ]);
-                }
-
-                $alertasGeneradas[] = [
-                    'sensor' => $sensor,
-                    'alertas_tilapia' => $alertasTilapia,
-                    'alertas_cachama' => $alertasCachama,
-                ];
-
-                $usuarios = User::whereNotNull('correo')->get();
-                foreach ($usuarios as $usuario) {
-                    $usuario->notify(new AlertaNotificacion($sensor, $alertasTilapia, $alertasCachama));
-                }
+                $alertasGeneradas[$tipo] = $alertas;
             }
         }
+        
+        // Enviar notificaciones por correo si hay alertas
+        if (!empty($alertasGeneradas)) {
+            $usuarios = User::whereNotNull('correo')
+                ->whereIn('rol', ['admin', 'operario'])
+                ->get();
+            Log::info('Usuarios válidos para notificaciones: ' . $usuarios->count());
+            
+            foreach ($usuarios as $usuario) {
+                $alertasTilapia = $alertasGeneradas['tilapia'] ?? [];
+                $alertasCachama = $alertasGeneradas['cachama'] ?? [];
+                
+                try {
+                    $usuario->notify(new AlertaNotificacion($sensorData, $alertasTilapia, $alertasCachama));
+                    Log::info("Correo enviado a: {$usuario->correo}");
+                } catch (\Exception $e) {
+                    Log::error('Error enviando notificación: ' . $e->getMessage());
+                }
+            }
+        } else {
+            Log::info('No hay alertas para enviar');
+        }
+        
         return $alertasGeneradas;
     }
 

@@ -9,12 +9,11 @@ use Illuminate\Http\Request;
 class EstandarController extends Controller
 {
     /**
-     * inicio
+     * Dashboard principal - redirige a sensores
      */
     public function index()
     {
-        $usuario = Auth::user();
-        return view('dashboard.estandar-welcome', compact('usuario'));
+        return $this->dashboardSensores();
     }
 
          /**

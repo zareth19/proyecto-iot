@@ -12,12 +12,11 @@ use Illuminate\Support\Facades\Mail;
 class AdminController extends Controller
 {
     /**
-     * inicio
+     * Dashboard principal - redirige a sensores
      */
     public function index()
     {
-        $usuario = Auth::user();
-        return view('dashboard.admin-welcome', compact('usuario'));
+        return $this->dashboardSensores();
     }
 
     /**

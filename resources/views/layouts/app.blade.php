@@ -6,12 +6,60 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function alertasComponent() {
+            return {
+                alertasOpen: false,
+                alertas: [],
+                noLeidas: 0,
+                cargarAlertas() {
+                    fetch('/api/alertas')
+                        .then(response => response.json())
+                        .then(data => { this.alertas = data; })
+                        .catch(error => console.error('Error:', error));
+                    fetch('/api/alertas/no-leidas')
+                        .then(response => response.json())
+                        .then(data => { this.noLeidas = data.count; })
+                        .catch(error => console.error('Error:', error));
+                },
+                marcarLeida(id) {
+                    fetch(`/api/alertas/${id}/leida`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const alerta = this.alertas.find(a => a.id === id);
+                            if (alerta && !alerta.leida) {
+                                alerta.leida = true;
+                                this.noLeidas = Math.max(0, this.noLeidas - 1);
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
+    @if(in_array($rol ?? '', ['admin', 'operario']))
+    <script src="{{ asset('js/alertas-swal.js') }}" defer></script>
+    @endif
 </head>
 
 <body class="bg-gray-100 min-h-screen"
-      x-data="{ sidebarOpen: false, showLogoutConfirm: false, deleteUserId: null }">
+      x-data="{ 
+          sidebarOpen: localStorage.getItem('sidebarOpen') === 'true' || false, 
+          showLogoutConfirm: false, 
+          deleteUserId: null 
+      }"
+      x-init="$watch('sidebarOpen', value => localStorage.setItem('sidebarOpen', value))">
 
 
     @php
@@ -24,7 +72,7 @@
 
         <!-- Botón hamburguesa -->
         <div class="flex justify-start mb-3">
-            <button @click="sidebarOpen = !sidebarOpen" class="text-white">
+            <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white hover:bg-green-700 p-2 rounded transition-colors">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -39,25 +87,33 @@
 
             <!-- ADMIN -->
             @if($rol === 'admin')
-            <a href="{{ route('dashboard.admin') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                <i class="fa-solid fa-gauge mr-2"></i>
-                <span x-show="sidebarOpen" x-transition>Inicio</span>
+            <a href="{{ route('admin.sensores') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                <i class="fa-solid fa-gauge mr-2 text-white"></i>
+                <span x-show="sidebarOpen" x-transition>Dashboard</span>
             </a>
-                <a href="{{ route('admin.sensores') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                    <i class="fa-solid fa-flask mr-2"></i>
-                    <span x-show="sidebarOpen" x-transition>Sensores</span>
-                </a>
-                <a href="{{ route('admin.usuarios') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                    <i class="fa-solid fa-users mr-2"></i>
+                <a href="{{ route('admin.usuarios') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-users mr-2 text-white"></i>
                     <span x-show="sidebarOpen" x-transition>Usuarios</span>
                 </a>
-                <a href="{{ route('admin.reportes') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                    <i class="fa-solid fa-chart-line mr-2"></i>
+                <a href="{{ route('admin.reportes') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-chart-line mr-2 text-white"></i>
                     <span x-show="sidebarOpen" x-transition>Reportes</span>
                 </a>
-                <div class="relative" x-data="{ alertasOpen: false, alertas: [], noLeidas: 0 }" x-init="cargarAlertas()">
-                    <button @click="alertasOpen = !alertasOpen" class="flex items-center hover:bg-green-700 p-2 rounded w-full text-left relative">
-                        <i class="fa-solid fa-bell mr-2"></i>
+                <a href="{{ route('admin.estanques') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-water mr-2 text-white"></i>
+                    <span x-show="sidebarOpen" x-transition>Estanques</span>
+                </a>
+                <a href="{{ route('admin.parametros') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-sliders mr-2 text-white"></i>
+                    <span x-show="sidebarOpen" x-transition>Parámetros</span>
+                </a>
+                <a href="{{ route('admin.cultivo-peces.index') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-fish mr-2 text-white"></i>
+                    <span x-show="sidebarOpen" x-transition>Especies de Peces</span>
+                </a>
+                <div class="relative" x-data="alertasComponent()" x-init="cargarAlertas(); setInterval(() => cargarAlertas(), 30000)">
+                    <button @click="alertasOpen = !alertasOpen" class="flex items-center hover:bg-green-700 p-2 rounded w-full text-left relative text-white">
+                        <i class="fa-solid fa-bell mr-2 text-white"></i>
                         <span x-show="sidebarOpen" x-transition>Alertas</span>
                         <span x-show="noLeidas > 0" x-text="noLeidas" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"></span>
                     </button>
@@ -92,21 +148,25 @@
 
             <!-- OPERARIO -->
             @if($rol === 'operario')
-            <a href="{{ route('dashboard.operario') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                <i class="fa-solid fa-gauge mr-2"></i>
-                <span x-show="sidebarOpen" x-transition>Inicio</span>
+            <a href="{{ route('operario.sensores') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                <i class="fa-solid fa-gauge mr-2 text-white"></i>
+                <span x-show="sidebarOpen" x-transition>Dashboard</span>
             </a>
-                <a href="{{ route('admin.sensores') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                    <i class="fa-solid fa-flask mr-2"></i>
-                    <span x-show="sidebarOpen" x-transition>Sensores</span>
-                </a>
-                <a href="{{ route('operario.reportes.index') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                    <i class="fa-solid fa-file-lines mr-2"></i>
+                <a href="{{ route('operario.reportes.index') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-file-lines mr-2 text-white"></i>
                     <span x-show="sidebarOpen" x-transition>Reportes Manuales</span>
                 </a>
-                <div class="relative" x-data="{ alertasOpen: false, alertas: [], noLeidas: 0 }" x-init="cargarAlertas()">
-                    <button @click="alertasOpen = !alertasOpen" class="flex items-center hover:bg-green-700 p-2 rounded w-full text-left relative">
-                        <i class="fa-solid fa-bell mr-2"></i>
+                <a href="{{ route('operario.estanques') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-water mr-2 text-white"></i>
+                    <span x-show="sidebarOpen" x-transition>Estanques</span>
+                </a>
+                <a href="{{ route('alertas.index') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                    <i class="fa-solid fa-bell mr-2 text-white"></i>
+                    <span x-show="sidebarOpen" x-transition>Ver Todas las Alertas</span>
+                </a>
+                <div class="relative" x-data="alertasComponent()" x-init="cargarAlertas(); setInterval(() => cargarAlertas(), 30000)">
+                    <button @click="alertasOpen = !alertasOpen" class="flex items-center hover:bg-green-700 p-2 rounded w-full text-left relative text-white">
+                        <i class="fa-solid fa-bell mr-2 text-white"></i>
                         <span x-show="sidebarOpen" x-transition>Alertas</span>
                         <span x-show="noLeidas > 0" x-text="noLeidas" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"></span>
                     </button>
@@ -136,20 +196,14 @@
                         </div>
                     </div>
                 </div>
-
-                </a>
             @endif
 
             <!-- ESTÁNDAR -->
             @if($rol === 'estandar')
-            <a href="{{ route('dashboard.estandar') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                <i class="fa-solid fa-gauge mr-2"></i>
-                <span x-show="sidebarOpen" x-transition>Inicio</span>
+            <a href="{{ route('estandar.sensores') }}" class="flex items-center hover:bg-green-700 p-2 rounded text-white">
+                <i class="fa-solid fa-gauge mr-2 text-white"></i>
+                <span x-show="sidebarOpen" x-transition>Dashboard</span>
             </a>
-                <a href="{{ route('admin.sensores') }}" class="flex items-center hover:bg-green-700 p-2 rounded">
-                    <i class="fa-solid fa-flask mr-2"></i>
-                    <span x-show="sidebarOpen" x-transition>Sensores</span>
-                </a>
             @endif
         </nav>
     </aside>
@@ -157,9 +211,13 @@
     <!-- CONTENIDO PRINCIPAL -->
     <main :class="sidebarOpen ? 'ml-64' : 'ml-20'" class="transition-all duration-300">
 
-        <!-- BARRA SUPERIOR -->
+        <!-- BARRA SUPERIOR (solo en dashboard) -->
+        @if(request()->routeIs('dashboard.*'))
         <header class="bg-white shadow flex items-center justify-between px-6 py-3 sticky top-0 z-30">
             <span class="text-xl font-semibold text-gray-800">Panel Usuario {{ $rol }}</span>
+        @else
+        <header class="bg-white shadow flex items-center justify-end px-6 py-3 sticky top-0 z-30">
+        @endif
 
             <div class="flex items-center space-x-3 relative" x-data="{ open: false }">
                 <div class="flex items-center space-x-2 cursor-pointer" @click="open = !open">
@@ -202,6 +260,69 @@
 
         <!-- CONTENIDO VARIABLE -->
         <div class="p-6">
+            <!-- Mensajes Flash con SweetAlert2 -->
+            @if(session('success'))
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#16a34a',
+                    confirmButtonText: 'Entendido',
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+            </script>
+            @endif
+            @if(session('error'))
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Entendido'
+                });
+            </script>
+            @endif
+            @if(session('warning'))
+            <script>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: '{{ session('warning') }}',
+                    confirmButtonColor: '#f59e0b',
+                    confirmButtonText: 'Entendido'
+                });
+            </script>
+            @endif
+            
+            <!-- Script de bienvenida con SweetAlert2 -->
+            @if(request()->routeIs('dashboard.admin') || request()->routeIs('dashboard.operario') || request()->routeIs('dashboard.estandar') || request()->routeIs('admin.sensores') || request()->routeIs('operario.sensores') || request()->routeIs('estandar.sensores'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (!localStorage.getItem('welcomeShown_{{ date('Y-m-d') }}')) {
+                        Swal.fire({
+                            title: '¡Bienvenido, {{ Auth::user()->nombre }}!',
+                            text: 'Sistema de Monitoreo IoT - Acuicultura',
+                            icon: 'success',
+                            timer: 10000,
+                            timerProgressBar: true,
+                            showConfirmButton: true,
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#16a34a',
+                            background: '#f0fdf4',
+                            color: '#166534',
+                            iconColor: '#16a34a',
+                            didOpen: () => {
+                                localStorage.setItem('welcomeShown_{{ date('Y-m-d') }}', 'true');
+                            }
+                        });
+                    }
+                });
+            </script>
+            @endif
+            
             @yield('content')
         </div>
     </main>
@@ -223,44 +344,7 @@
         </div>
     </div>
 
-<script>
-function cargarAlertas() {
-    fetch('/api/alertas')
-        .then(response => response.json())
-        .then(data => {
-            this.alertas = data;
-        })
-        .catch(error => console.error('Error:', error));
-    
-    fetch('/api/alertas/no-leidas')
-        .then(response => response.json())
-        .then(data => {
-            this.noLeidas = data.count;
-        })
-        .catch(error => console.error('Error:', error));
-}
 
-function marcarLeida(id) {
-    fetch(`/api/alertas/${id}/leida`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const alerta = this.alertas.find(a => a.id === id);
-            if (alerta && !alerta.leida) {
-                alerta.leida = true;
-                this.noLeidas = Math.max(0, this.noLeidas - 1);
-            }
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-</script>
 
 <!-- Formulario oculto para logout -->
 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

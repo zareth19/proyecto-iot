@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'verificar.contraseña' => \App\Http\Middleware\VerificarCambioContraseña::class,
+        'prevent.direct' => \App\Http\Middleware\PreventDirectAccess::class,
     ]);
     
     $middleware->web(append: [

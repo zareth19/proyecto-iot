@@ -19,7 +19,25 @@
             </div>
         </div>
         
-        <!-- Filtros y descarga -->
+        <!-- Filtros -->
+        <form method="GET" action="{{ route('operario.reportes.index') }}" class="flex items-end space-x-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">Filtrar por Estanque</label>
+                <select name="estanque_id" class="border border-gray-300 rounded px-3 py-2 text-sm">
+                    <option value="">Todos los estanques</option>
+                    @foreach($estanques as $estanque)
+                        <option value="{{ $estanque->id }}" {{ request('estanque_id') == $estanque->id ? 'selected' : '' }}>
+                            {{ $estanque->identificador }} - {{ ucfirst($estanque->tipo_cultivo) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm">
+                <i class="fas fa-filter mr-2"></i>Filtrar
+            </button>
+        </form>
+        
+        <!-- Descarga -->
         <form method="GET" action="{{ route('operario.reportes.exportar') }}" class="flex items-end space-x-4">
             <div>
                 <label class="block text-sm font-medium text-gray-600 mb-1">Fecha Inicio</label>
@@ -54,6 +72,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Fecha/Hora</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Estanque</th>
                             <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Operario</th>
                             <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Temperatura (°C)</th>
                             <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">pH</th>
@@ -67,6 +86,15 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="py-3 px-4 text-sm text-gray-900">
                                     {{ $reporte->fecha_toma->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="py-3 px-4 text-sm text-gray-900">
+                                    @if($reporte->estanque)
+                                        <span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                                            {{ $reporte->estanque->identificador }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">Sin estanque</span>
+                                    @endif
                                 </td>
                                 <td class="py-3 px-4 text-sm text-gray-900">
                                     {{ $reporte->usuario->nombre }} {{ $reporte->usuario->apellido }}

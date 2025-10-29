@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
-<body class="bg-gradient-to-br from-green-400 to-green-600 min-h-screen flex items-center justify-center">
+<body class="bg-gradient-to-br from-green-300 to-green-600 min-h-screen flex items-center justify-center">
     <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <img src="{{ asset('imagenes/LOGO_SENA.png') }}" alt="Logo SENA" class="h-16 mx-auto mb-4">

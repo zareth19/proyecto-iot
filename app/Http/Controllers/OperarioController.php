@@ -3,34 +3,26 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Http\Request;
 
 class OperarioController extends Controller
 {
-    /**
-     * inicio
-     */
     public function index()
     {
-        $usuario = Auth::user();
-        return view('dashboard.operario-welcome', compact('usuario'));
+        return $this->dashboardSensores();
     }
 
-        /**
-     * Sensores 
-     */
-public function dashboardSensores() {
-    return view('admin.sensores');
-}
+    public function dashboardSensores() {
+        return view('operario.sensores');
+    }
 
-public function datosSensores(Request $request) {
-    $limite = $request->get('limite', 10);
-    $datos = DB::table('sensores_final')
-        ->orderBy('fecha', 'desc')
-        ->limit($limite)
-        ->get();
+    public function datosSensores(Request $request) {
+        $limite = $request->get('limite', 10);
+        $datos = DB::table('sensores_final')
+            ->orderBy('fecha', 'desc')
+            ->limit($limite)
+            ->get();
 
-    return response()->json($datos);
-}
+        return response()->json($datos);
+    }
 }

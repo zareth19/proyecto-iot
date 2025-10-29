@@ -7,9 +7,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\SensorData;
-use App\Services\TwilioWhatsAppChannel;
 
-class AlertaNotificacion extends Notification
+class AlertaNotificacion extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -34,7 +33,7 @@ class AlertaNotificacion extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', TwilioWhatsAppChannel::class];
+        return ['mail'];
     }
 
     /**

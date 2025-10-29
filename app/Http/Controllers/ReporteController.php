@@ -9,9 +9,19 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReporteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.reportes');
+        $estanques = \App\Models\Estanque::all();
+        
+        $query = \App\Models\ReporteManual::with(['usuario', 'estanque']);
+        
+        if ($request->estanque_id) {
+            $query->where('estanque_id', $request->estanque_id);
+        }
+        
+        $reportesManuales = $query->orderBy('fecha_toma', 'desc')->paginate(10);
+        
+        return view('admin.reportes', compact('estanques', 'reportesManuales'));
     }
 
     public function generar(Request $request)
@@ -24,19 +34,23 @@ class ReporteController extends Controller
         $fechaInicio = $request->fecha_inicio;
         $fechaFin = $request->fecha_fin;
         
-        $datos = SensorData::whereBetween('fecha', [$fechaInicio, $fechaFin])
-                          ->orderBy('fecha', 'desc')
-                          ->get();
+        $query = SensorData::whereBetween('fecha', [$fechaInicio, $fechaFin]);
+        
+        if ($request->estanque_id) {
+            $query->where('estanque_id', $request->estanque_id);
+        }
+        
+        $datos = $query->orderBy('fecha', 'desc')->get();
 
         $estadisticas = [
             'total_registros' => $datos->count(),
-            'temp_promedio' => round($datos->avg('temperatura'), 2),
+            'temp_promedio' => round($datos->avg(fn($d) => (float)$d->temperatura), 2),
             'temp_max' => $datos->max('temperatura'),
             'temp_min' => $datos->min('temperatura'),
-            'ph_promedio' => round($datos->avg('ph'), 2),
+            'ph_promedio' => round($datos->avg(fn($d) => (float)$d->ph), 2),
             'ph_max' => $datos->max('ph'),
             'ph_min' => $datos->min('ph'),
-            'turbidez_promedio' => round($datos->avg('turbidez'), 2),
+            'turbidez_promedio' => round($datos->avg(fn($d) => (float)$d->turbidez), 2),
         ];
 
         $analisisEspecies = $this->analizarEspecies($estadisticas);
@@ -59,19 +73,23 @@ class ReporteController extends Controller
         $fechaInicio = $request->fecha_inicio;
         $fechaFin = $request->fecha_fin;
         
-        $datos = SensorData::whereBetween('fecha', [$fechaInicio, $fechaFin])
-                          ->orderBy('fecha', 'desc')
-                          ->get();
+        $query = SensorData::whereBetween('fecha', [$fechaInicio, $fechaFin]);
+        
+        if ($request->estanque_id) {
+            $query->where('estanque_id', $request->estanque_id);
+        }
+        
+        $datos = $query->orderBy('fecha', 'desc')->get();
 
         $estadisticas = [
             'total_registros' => $datos->count(),
-            'temp_promedio' => round($datos->avg('temperatura'), 2),
+            'temp_promedio' => round($datos->avg(fn($d) => (float)$d->temperatura), 2),
             'temp_max' => $datos->max('temperatura'),
             'temp_min' => $datos->min('temperatura'),
-            'ph_promedio' => round($datos->avg('ph'), 2),
+            'ph_promedio' => round($datos->avg(fn($d) => (float)$d->ph), 2),
             'ph_max' => $datos->max('ph'),
             'ph_min' => $datos->min('ph'),
-            'turbidez_promedio' => round($datos->avg('turbidez'), 2),
+            'turbidez_promedio' => round($datos->avg(fn($d) => (float)$d->turbidez), 2),
         ];
 
         $analisisEspecies = $this->analizarEspecies($estadisticas);
@@ -92,7 +110,7 @@ class ReporteController extends Controller
         $alertasTilapia = [];
         $alertasCachama = [];
 
-        // Rangos ideales para tilapia
+        // --- Rangos ideales para Tilapia ---
         if ($estadisticas['temp_promedio'] < 26 || $estadisticas['temp_promedio'] > 30) {
             $alertasTilapia[] = "Temperatura promedio ({$estadisticas['temp_promedio']}°C) fuera del rango ideal para tilapia [26-30°C]";
         }
@@ -100,7 +118,7 @@ class ReporteController extends Controller
             $alertasTilapia[] = "pH promedio ({$estadisticas['ph_promedio']}) fuera del rango ideal para tilapia [6.5-9]";
         }
 
-        // Rangos ideales para cachama
+        // --- Rangos ideales para Cachama ---
         if ($estadisticas['temp_promedio'] < 24 || $estadisticas['temp_promedio'] > 32) {
             $alertasCachama[] = "Temperatura promedio ({$estadisticas['temp_promedio']}°C) fuera del rango ideal para cachama [24-32°C]";
         }
@@ -112,5 +130,37 @@ class ReporteController extends Controller
             'tilapia' => $alertasTilapia,
             'cachama' => $alertasCachama
         ];
+    }
+
+    public function exportarManuales(Request $request)
+    {
+        $query = \App\Models\ReporteManual::with(['usuario', 'estanque']);
+        
+        if ($request->estanque_id) {
+            $query->where('estanque_id', $request->estanque_id);
+        }
+        
+        if ($request->fecha_inicio) {
+            $query->whereDate('fecha_toma', '>=', $request->fecha_inicio);
+        }
+        
+        if ($request->fecha_fin) {
+            $query->whereDate('fecha_toma', '<=', $request->fecha_fin);
+        }
+        
+        $reportes = $query->orderBy('fecha_toma', 'desc')->get();
+        
+        $pdf = Pdf::loadView('admin.reportes-manuales-pdf', compact('reportes'));
+        
+        return $pdf->download('reportes-manuales-admin-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function descargarManualIndividual($id)
+    {
+        $reporte = \App\Models\ReporteManual::with(['usuario', 'estanque'])->findOrFail($id);
+        
+        $pdf = Pdf::loadView('admin.reporte-manual-individual-pdf', compact('reporte'));
+        
+        return $pdf->download('reporte-manual-' . $reporte->id . '-' . $reporte->fecha_toma->format('Y-m-d') . '.pdf');
     }
 }

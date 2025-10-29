@@ -13,6 +13,7 @@ class ReporteManual extends Model
 
     protected $fillable = [
         'usuario_id',
+        'estanque_id',
         'temperatura',
         'ph',
         'turbidez',
@@ -27,5 +28,10 @@ class ReporteManual extends Model
     public function usuario()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function estanque()
+    {
+        return $this->belongsTo(Estanque::class);
     }
 }

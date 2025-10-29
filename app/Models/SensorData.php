@@ -16,7 +16,8 @@ class SensorData extends Model
         'fecha',
         'temperatura',
         'ph',
-        'turbidez'
+        'turbidez',
+        'estanque_id'
     ];
 
     // Atributos simulados para compatibilidad

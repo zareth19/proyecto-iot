@@ -2,11 +2,109 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto" x-data="reportes()">
+    <!-- Reportes Manuales -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">📝 Reportes Manuales</h2>
+            <form method="GET" class="flex items-center space-x-2">
+                <select name="estanque_id" class="border rounded px-3 py-2 text-sm">
+                    <option value="">Todos los estanques</option>
+                    @foreach($estanques as $estanque)
+                        <option value="{{ $estanque->id }}" {{ request('estanque_id') == $estanque->id ? 'selected' : '' }}>
+                            {{ $estanque->identificador }} - {{ ucfirst($estanque->tipo_cultivo) }}
+                        </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700">
+                    <i class="fas fa-filter mr-1"></i>Filtrar
+                </button>
+                <a href="{{ route('admin.reportes.manuales.exportar', request()->all()) }}" class="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                    <i class="fas fa-file-pdf mr-1"></i>Exportar PDF
+                </a>
+            </form>
+        </div>
+
+        @if($reportesManuales->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-200 rounded-lg">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Fecha/Hora</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Estanque</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Operario</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Temperatura (°C)</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">pH</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Turbidez (NTU)</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Observaciones</th>
+                            <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach($reportesManuales as $reporte)
+                            <tr class="hover:bg-gray-50">
+                                <td class="py-3 px-4 text-sm text-gray-900">
+                                    {{ $reporte->fecha_toma->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="py-3 px-4 text-sm text-gray-900">
+                                    @if($reporte->estanque)
+                                        <span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                                            {{ $reporte->estanque->identificador }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">Sin estanque</span>
+                                    @endif
+                                </td>
+                                <td class="py-3 px-4 text-sm text-gray-900">
+                                    {{ $reporte->usuario->nombre }} {{ $reporte->usuario->apellido }}
+                                </td>
+                                <td class="py-3 px-4 text-sm {{ $reporte->temperatura >= 24 && $reporte->temperatura <= 28 ? 'text-green-600' : 'text-red-600 font-semibold' }}">
+                                    {{ $reporte->temperatura }}°C
+                                </td>
+                                <td class="py-3 px-4 text-sm {{ $reporte->ph >= 6.5 && $reporte->ph <= 8.5 ? 'text-green-600' : 'text-red-600 font-semibold' }}">
+                                    {{ $reporte->ph }}
+                                </td>
+                                <td class="py-3 px-4 text-sm {{ $reporte->turbidez <= 5 ? 'text-green-600' : 'text-red-600 font-semibold' }}">
+                                    {{ $reporte->turbidez }} NTU
+                                </td>
+                                <td class="py-3 px-4 text-sm text-gray-600">
+                                    {{ $reporte->observaciones ? Str::limit($reporte->observaciones, 50) : 'Sin observaciones' }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <a href="{{ route('admin.reportes.manuales.descargar', $reporte->id) }}" 
+                                        class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition" 
+                                        title="Descargar PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">
+                {{ $reportesManuales->links() }}
+            </div>
+        @else
+            <div class="text-center py-8 text-gray-500">
+                No hay reportes manuales registrados
+            </div>
+        @endif
+    </div>
+
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">📊 Reportes de Sensores</h2>
 
         <!-- Filtros -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estanque</label>
+                <select x-model="estanqueId" class="w-full border rounded-lg px-3 py-2">
+                    <option value="">Todos los estanques</option>
+                    @foreach($estanques as $estanque)
+                        <option value="{{ $estanque->id }}">{{ $estanque->identificador }} - {{ ucfirst($estanque->tipo_cultivo) }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
                 <input type="date" x-model="fechaInicio" :max="new Date().toISOString().split('T')[0]" class="w-full border rounded-lg px-3 py-2">
@@ -93,6 +191,7 @@ function reportes() {
     return {
         fechaInicio: new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0],
         fechaFin: new Date().toISOString().split('T')[0],
+        estanqueId: '',
         datos: [],
         estadisticas: null,
 
@@ -114,7 +213,8 @@ function reportes() {
                     },
                     body: JSON.stringify({
                         fecha_inicio: this.fechaInicio,
-                        fecha_fin: this.fechaFin
+                        fecha_fin: this.fechaFin,
+                        estanque_id: this.estanqueId
                     })
                 });
                 
@@ -135,7 +235,7 @@ function reportes() {
                 alert('No se pueden generar reportes de fechas futuras');
                 return;
             }
-            const url = `/admin/reportes/exportar?fecha_inicio=${this.fechaInicio}&fecha_fin=${this.fechaFin}`;
+            const url = `/admin/reportes/exportar?fecha_inicio=${this.fechaInicio}&fecha_fin=${this.fechaFin}&estanque_id=${this.estanqueId}`;
             window.open(url, '_blank');
         },
 

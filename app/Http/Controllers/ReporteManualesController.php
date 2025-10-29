@@ -10,23 +10,30 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReporteManualesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $reportes = ReporteManual::with('usuario')
-            ->orderBy('fecha_toma', 'desc')
-            ->paginate(10);
+        $query = ReporteManual::with(['usuario', 'estanque']);
+        
+        if ($request->estanque_id) {
+            $query->where('estanque_id', $request->estanque_id);
+        }
+        
+        $reportes = $query->orderBy('fecha_toma', 'desc')->paginate(10);
+        $estanques = \App\Models\Estanque::all();
             
-        return view('operario.reportes-manuales', compact('reportes'));
+        return view('operario.reportes-manuales', compact('reportes', 'estanques'));
     }
 
     public function crear()
     {
-        return view('operario.crear-reporte');
+        $estanques = \App\Models\Estanque::where('estado', 'activo')->get();
+        return view('operario.crear-reporte', compact('estanques'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'estanque_id' => 'required|exists:estanques,id',
             'temperatura' => 'required|numeric|min:0|max:50',
             'ph' => 'required|numeric|min:0|max:14',
             'turbidez' => 'required|numeric|min:0',
@@ -36,6 +43,7 @@ class ReporteManualesController extends Controller
 
         ReporteManual::create([
             'usuario_id' => Auth::id(),
+            'estanque_id' => $request->estanque_id,
             'temperatura' => $request->temperatura,
             'ph' => $request->ph,
             'turbidez' => $request->turbidez,

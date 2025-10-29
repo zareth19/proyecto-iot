@@ -43,27 +43,35 @@
                 <div class="md:col-span-2">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
-                            <input type="text" name="nombre" value="{{ Auth::user()->nombre }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                            @error('nombre')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Primer Nombre</label>
+                            <input type="text" value="{{ Auth::user()->primer_nombre ?? Auth::user()->nombre }}" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
-                            <input type="text" name="apellido" value="{{ Auth::user()->apellido }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                            @error('apellido')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Segundo Nombre</label>
+                            <input type="text" value="{{ Auth::user()->segundo_nombre ?? 'No registrado' }}" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Primer Apellido</label>
+                            <input type="text" value="{{ Auth::user()->primer_apellido ?? Auth::user()->apellido }}" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Segundo Apellido</label>
+                            <input type="text" value="{{ Auth::user()->segundo_apellido ?? 'No registrado' }}" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                            <input type="text" name="telefono" value="{{ Auth::user()->telefono }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <input type="tel" name="telefono" value="{{ Auth::user()->telefono }}" 
+                                   pattern="[0-9]{10}" maxlength="10" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                   placeholder="Ej: 3001234567">
                             @error('telefono')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
@@ -82,8 +90,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Documento</label>
-                            <input type="text" value="{{ Auth::user()->tipo_documento }} {{ Auth::user()->numero_documento }}" 
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ Auth::user()->tipo_documento }} - Documento</label>
+                            <input type="text" value="{{ Auth::user()->numero_documento }}" 
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly>
                         </div>
                     </div>
