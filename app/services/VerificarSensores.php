@@ -11,8 +11,8 @@ class VerificarSensores
 {
     private $rangosIdeales = [
         'tilapia' => [
-            'temperatura' => ['min' => 26, 'max' => 30],
-            'ph' => ['min' => 6.5, 'max' => 9.0],
+            'temperatura' => ['min' => 24, 'max' => 30],
+            'ph' => ['min' => 6.50, 'max' => .0],
             'oxigeno_disuelto' => ['min' => 5.0, 'max' => INF], // > 5.0
             'amoniaco' => ['min' => -INF, 'max' => 0.05], // < 0.05
             'nitritos' => ['min' => -INF, 'max' => 0.5], // < 0.5
@@ -38,13 +38,6 @@ class VerificarSensores
 
     public function ejecutar(SensorData $sensorData, $tipoCultivo = null)
     {
-        Log::info('Verificando sensores', [
-            'sensor_id' => $sensorData->id,
-            'temperatura' => $sensorData->temperatura,
-            'ph' => $sensorData->ph,
-            'turbidez' => $sensorData->turbidez
-        ]);
-        
         $alertasGeneradas = [];
         
         // Si no se especifica tipo de cultivo, verificar ambos
@@ -54,8 +47,6 @@ class VerificarSensores
             $alertas = $this->fueraDeRango($sensorData, $tipo);
             
             if (!empty($alertas)) {
-                Log::info("Alertas para {$tipo}", $alertas);
-                
                 // Guardar alertas en base de datos
                 foreach ($alertas as $alerta) {
                     Alerta::create([
@@ -74,24 +65,17 @@ class VerificarSensores
         
         // Enviar notificaciones por correo si hay alertas
         if (!empty($alertasGeneradas)) {
-            $usuarios = User::whereNotNull('correo')
-                ->whereIn('rol', ['admin', 'operario'])
-                ->get();
-            Log::info('Usuarios válidos para notificaciones: ' . $usuarios->count());
-            
+            $usuarios = User::whereNotNull('correo')->get();
             foreach ($usuarios as $usuario) {
                 $alertasTilapia = $alertasGeneradas['tilapia'] ?? [];
                 $alertasCachama = $alertasGeneradas['cachama'] ?? [];
                 
                 try {
                     $usuario->notify(new AlertaNotificacion($sensorData, $alertasTilapia, $alertasCachama));
-                    Log::info("Correo enviado a: {$usuario->correo}");
                 } catch (\Exception $e) {
                     Log::error('Error enviando notificación: ' . $e->getMessage());
                 }
             }
-        } else {
-            Log::info('No hay alertas para enviar');
         }
         
         return $alertasGeneradas;
